@@ -1,4 +1,4 @@
-# PyBCSEIS BCSEIS 地震互相关计算程序的Python实现
+# BCSEIS 地震互相关计算程序的Python实现
 
 ## 依赖库：
 obspy,pandas,pyasdf
@@ -13,4 +13,4 @@ Lion Krischer, James Smith, Wenjie Lei, Matthieu Lefebvre, Youyi Ruan, Elliott S
 
 This is the Adaptable Seismic Data Format - if you are looking for the Advanced Scientific Data Format, go here: https://asdf.readthedocs.io/en/latest/
 
-pyasdf:https://seismicdata.github.io/pyasdf/tutorial.html
+pyasdf:https://seismicdata.github.io/pyasdf/index.html
