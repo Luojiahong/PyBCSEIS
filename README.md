@@ -3,6 +3,8 @@
 ## 依赖库：
 obspy,pandas,pyasdf
 
+pygmt（用于画图，可选）
+
 ## 输出结果
 直接对asdf地震数据格式进行互相关计算，输出hypoDD的dt.cc格式
 
