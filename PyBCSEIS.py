@@ -7,6 +7,8 @@ Created on Fri Oct 16 15:12:19 2020
 
 import os
 import glob
+import shutil 
+
 import PyREAL
 from obspy import Stream,read
 import pandas as pd
@@ -77,8 +79,12 @@ def makeBCSEIS(bcseisdir=None):
         os.makedirs(bcseisdir+os.sep+'Events'+os.sep+'EventInfo')
         os.makedirs(bcseisdir+os.sep+'Events'+os.sep+'IdDirFiles')
         os.makedirs(bcseisdir+os.sep+'Events'+os.sep+'WaveformCC')
+        # copy the exe the the WaveformCC
+        shutil.copy('src'+os.sep+'bcseis.exe',bcseisdir+os.sep+'Events'+os.sep+'WaveformCC')
+        shutil.copy('src'+os.sep+'setsachdr.exe',bcseisdir+os.sep+'Events'+os.sep+'WaveformCC')
+        shutil.copy('src'+os.sep+'getsachdr.exe',bcseisdir+os.sep+'Events'+os.sep+'WaveformCC')
 def getStaStat(basedir=None):
-        # getStaStat.pl station.list $dataDirlist > sta.err
+    # getStaStat.pl station.list $dataDirlist > sta.err
     dataDir_list = basedir+os.sep+'Events/IdDirFiles/iddir.dat'
     station_list = basedir+os.sep+'Stations/station.dat'
     
@@ -226,10 +232,11 @@ def buildEvents(basedir=None,asdf=None):
                 staname = pick.waveform_id.station_code
                 pickdict.setdefault(staname,[]).append(pick.resource_id)
             
+            #stalista = list(ds.get_all_coordinates())
             for sta in pickdict:
                 picks = pickdict[sta]
                 # get the station coordinates
-                station_coordinates = ds.waveforms['WY.'+sta].coordinates
+                station_coordinates = ds.waveforms['S1.'+sta].coordinates
                 stla = station_coordinates['latitude']
                 stlo = station_coordinates['longitude']
                 stel = station_coordinates['elevation_in_m']*1000.
@@ -240,12 +247,12 @@ def buildEvents(basedir=None,asdf=None):
                 # 计算震中距等
                 dist = DistAz(lat1=stla,lon1=stlo,lat2=float(evla),lon2=float(evlo))
                 distance = dist.degreesToKilometers(dist.getDelta())
-                asdfname = origin_time.strftime("%Y%m%d")
-                asdfname = 'E:\Python\PhaseNet\ASDFDataset'+os.sep+origin_time.strftime("%Y%m%d")+'.hdf5'
-                with pyasdf.ASDFDataSet(asdfname,mode='r') as evtds:
-                    st_new = evtds.get_waveforms(network='*',station=sta,location='*',channel='*',starttime=origin_time,endtime=origin_time+60,tag='raw_recording')
-                    st_new.interpolate(100)
-                #st_new = ds.get_waveforms(network='*',station=sta,location='*',channel='*',starttime=origin_time,endtime=origin_time+60,tag='raw_recording')
+                #asdfname = origin_time.strftime("%Y%m%d")
+                #asdfname = 'E:\Python\PhaseNet\ASDFDataset'+os.sep+origin_time.strftime("%Y%m%d")+'.hdf5'
+                #with pyasdf.ASDFDataSet(asdfname,mode='r') as evtds:
+                #    st_new = evtds.get_waveforms(network='*',station=sta,location='*',channel='*',starttime=origin_time,endtime=origin_time+60,tag='raw_recording')
+                #    st_new.interpolate(100)
+                st_new = ds.get_waveforms(network='*',station=sta,location='*',channel='*',starttime=origin_time,endtime=origin_time+60,tag='raw_recording')
                 for tr in st_new:
                     tr.stats.sac = {}
                     tr.stats.sac['o'] = 0.0e0 # 发震时刻O
@@ -281,6 +288,7 @@ def buildEvents(basedir=None,asdf=None):
                     sacname = '.'.join([tr.stats.station,tr.stats.channel[-1],'SAC'])
                     tr.detrend('linear')
                     tr.detrend('demean')
+                    tr.interpolate(100)
                     tr.write(datadir+os.sep+sacname,format='SAC')
     # write out the station
     with open(basedir+os.sep+'Stations/station.dat','w') as f:
@@ -361,6 +369,10 @@ def runBCSEIS(basedir=None):
     import os
     iddir = basedir+os.sep+'Events/IdDirFiles/iddir.dat'
     bcseisid = basedir+os.sep+'Events'+os.sep+'WaveformCC'+os.sep+'bcseis.id'
+    cur = os.getcwd()
+    #shutil.copy('src'+os.sep+'bcseis',basedir+os.sep+'Events'+os.sep+'WaveformCC')
+    #shutil.copy('src'+os.sep+'setsachdr',basedir+os.sep+'Events'+os.sep+'WaveformCC')
+    #shutil.copy('src'+os.sep+'getsachdr',basedir+os.sep+'Events'+os.sep+'WaveformCC')
     with open(bcseisid,'w') as f:
         with open(iddir,'r') as f1:
             for line in f1:
@@ -388,6 +400,7 @@ def runBCSEIS(basedir=None):
     print(os.getcwd())
     p = subprocess.Popen(cmd,shell=True)
     p.communicate()
+    os.chdir(cur)
     #bcseis 0 $baseDir $distCutoff $preNum1 $posNum1 $preNum2 $posNum2 $segLen1 $segLen2 $lf $hf $velCode $startNum
 def getDtFromCC(basedir=None,option=None,lCCLim=None,cCCLim=None,uCCLim=None,diffLim=None,dtFile=None):
     #Script:	getDtFromCC.pl
@@ -499,32 +512,32 @@ def getDtFromCC(basedir=None,option=None,lCCLim=None,cCCLim=None,uCCLim=None,dif
 if __name__ == '__main__':
     # 创建文件系统，指定工作目录所在的位置，后续数据处理和计算都早该文件夹下
     # 文件夹具体的组件模式参看使用手册
-    basedir = './BCSEIS'
+    basedir = 'Sanxia'
     print('Step1: making BCSEIS working...')
     makeBCSEIS(bcseisdir=basedir)
     
     # 数据文件与格式转换
     # 将ASDF格式的数据转换成BCSEIS相关的数据文件，地震目录和走时等信息的转换，同时对波形进行处理
-    asdf = 'catalog_20190907.hdf5'
+    asdf = '7yue.hdf5'
     
     print('Step2: building Events...')
-    #buildEvents(basedir=basedir,asdf=asdf)
+    buildEvents(basedir=basedir,asdf=asdf)
     
     # 台站记录震相统计与滤波
     print('Step3: get Stations statics...')
-    #getStaStat(basedir=basedir)
+    getStaStat(basedir=basedir)
     
     # 从波形文件中获取CC计算文件
     print('Step4: calcCCEvInfo...')
-    #calcCCEvInfo3(basedir=basedir)
+    calcCCEvInfo3(basedir=basedir)
     # 这步可以从hypoDD中直接获取
     
     # run BCSEIS
     print('Sterp 5: Run BCSEIS...')
-    #runBCSEIS(basedir=basedir)
+    runBCSEIS(basedir=basedir)
     
     # 
-    # 生成
+    # 生成 dt.cc
     print('Step 6: get Dt from cc...')
     ccInfo = getDtFromCC(basedir=basedir,option=0,lCCLim=0.5,cCCLim=0.7,uCCLim=0.8,diffLim=100,dtFile='dt_cc.cc0')
     #ccInfo = getDtFromCC(basedir=basedir,option=1,lCCLim=0.5,cCCLim=0.7,uCCLim=0.8,diffLim=100,dtFile='dt_cc.cc1')
