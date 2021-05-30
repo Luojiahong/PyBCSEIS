@@ -11,7 +11,7 @@ pygmt（用于画图，可选）
 ## 结果绘图
 使用pygmt对dt.cc进行画图
 
-![avatar -w200](figures/CJP_P_200900004_200900007.png)
+![avatar -w100](figures/CJP_P_200900004_200900007.png)
 
 ## 参考文献
 Wen-Xuan Du, Clifford H. Thurber, Donna Eberhart-Phillips; Earthquake Relocation Using Cross-Correlation Time Delay Estimates Verified with the Bispectrum Method. Bulletin of the Seismological Society of America ; 94 (3): 856–866. doi: https://doi.org/10.1785/0120030084
