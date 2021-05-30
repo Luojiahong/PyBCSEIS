@@ -8,6 +8,9 @@ pygmt（用于画图，可选）
 ## 输出结果
 直接对asdf地震数据格式进行互相关计算，输出hypoDD的dt.cc格式
 
+## 结果绘图
+使用pygmt对dt.cc进行画图
+
 ## 参考文献
 Wen-Xuan Du, Clifford H. Thurber, Donna Eberhart-Phillips; Earthquake Relocation Using Cross-Correlation Time Delay Estimates Verified with the Bispectrum Method. Bulletin of the Seismological Society of America ; 94 (3): 856–866. doi: https://doi.org/10.1785/0120030084
 
