@@ -80,9 +80,9 @@ def makeBCSEIS(bcseisdir=None):
         os.makedirs(bcseisdir+os.sep+'Events'+os.sep+'IdDirFiles')
         os.makedirs(bcseisdir+os.sep+'Events'+os.sep+'WaveformCC')
         # copy the exe the the WaveformCC
-        shutil.copy('src'+os.sep+'bcseis.exe',bcseisdir+os.sep+'Events'+os.sep+'WaveformCC')
-        shutil.copy('src'+os.sep+'setsachdr.exe',bcseisdir+os.sep+'Events'+os.sep+'WaveformCC')
-        shutil.copy('src'+os.sep+'getsachdr.exe',bcseisdir+os.sep+'Events'+os.sep+'WaveformCC')
+        shutil.copy('BCSEIS'+os.sep+'bin'+os.sep+'bcseis',bcseisdir+os.sep+'Events'+os.sep+'WaveformCC')
+        shutil.copy('BCSEIS'+os.sep+'bin'+os.sep+'setsachdr',bcseisdir+os.sep+'Events'+os.sep+'WaveformCC')
+        shutil.copy('BCSEIS'+os.sep+'bin'+os.sep+'getsachdr',bcseisdir+os.sep+'Events'+os.sep+'WaveformCC')
 def getStaStat(basedir=None):
     # getStaStat.pl station.list $dataDirlist > sta.err
     dataDir_list = basedir+os.sep+'Events/IdDirFiles/iddir.dat'
@@ -236,7 +236,14 @@ def buildEvents(basedir=None,asdf=None):
             for sta in pickdict:
                 picks = pickdict[sta]
                 # get the station coordinates
-                station_coordinates = ds.waveforms['S1.'+sta].coordinates
+                #station_coordinates = ds.waveforms['S1.'+sta].coordinates
+                # fixed by network not only S1
+                station_group = next((g for g in ds.waveforms.list() if g.endswith('.' + sta)), None)
+                if station_group is None:
+                    print(f"Error: not find {sta} in data!")
+                    break
+                station_coordinates = ds.waveforms[station_group].coordinates
+                
                 stla = station_coordinates['latitude']
                 stlo = station_coordinates['longitude']
                 stel = station_coordinates['elevation_in_m']*1000.
